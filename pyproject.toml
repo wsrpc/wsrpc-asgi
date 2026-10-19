@@ -1,0 +1,107 @@
+[project]
+name = "wsrpc-asgi"
+version = "0.1.0"
+description = "Bidirectional WebSocket RPC for ASGI applications"
+readme = "README.md"
+license = "Apache-2.0"
+keywords = ["wsrpc", "websocket", "rpc", "json-rpc", "js", "typescript", "javascript"]
+authors = [{name = "Dmitry Orlov", email = "orlovdl@gmail.com"}]
+requires-python = ">=3.10"
+classifiers = [
+    "Topic :: Internet",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Libraries",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX",
+    "Operating System :: Microsoft",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+]
+dependencies = []
+
+[project.optional-dependencies]
+client = ["websockets>=14,<18"]
+starlette = ["starlette>=0.40"]
+fastapi = ["fastapi>=0.115"]
+
+[project.urls]
+"Source" = "https://github.com/wsrpc/wsrpc-asgi"
+"Tracker" = "https://github.com/wsrpc/wsrpc-asgi/issues"
+"Documentation" = "https://docs.wsrpc.org/"
+"Upstream" = "https://github.com/wsrpc/wsrpc-aiohttp"
+
+[dependency-groups]
+core-tests = [
+    "pytest>=9,<10",
+    "async-timeout>=5,<6; python_version < '3.11'",
+    "pytest-asyncio>=1,<2",
+    "aiohttp>=3.12",
+    "websockets>=14,<18",
+    "uvicorn>=0.35",
+    "hypercorn>=0.17",
+    "pytest-cov>=7,<8",
+    "wsrpc-aiohttp>=4.0.4",
+]
+dev = [
+    {include-group = "core-tests"},
+    "fastapi>=0.115",
+    "httpx>=0.28",
+    "markdown-pytest>=0.5,<1",
+    "ruff>=0.14,<1",
+    "mypy>=1.18,<2",
+    # pytask 0.6 uses msgspec, which cannot build on free-threaded 3.13.
+    "pytask>=0.5.8,<0.6; python_version < '3.14'",
+    "pytask>=0.6,<0.7; python_version >= '3.14'",
+]
+integrations = [
+    "django>=5.2",
+    "channels>=4.2",
+    "quart>=0.20",
+    "litestar>=2.15",
+    "falcon>=4",
+    "sanic>=24.12",
+    "blacksheep>=2.1",
+]
+serializers = ["orjson>=3.11,<4"]
+uvloop = ["uvloop>=0.22,<1; sys_platform != 'win32'"]
+
+[build-system]
+requires = ["uv_build>=0.12,<0.13"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""
+source-include = ["tests/**", "task_dev.py", "Makefile"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests", "README.md"]
+
+[tool.ruff]
+line-length = 80
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
+[tool.mypy]
+python_version = "3.10"
+check_untyped_defs = true
+warn_unused_ignores = true
+
+[tool.pytask.ini_options]
+paths = ["task_dev.py"]
+force = true

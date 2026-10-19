@@ -1,0 +1,21 @@
+import asyncio
+
+from wsrpc_asgi import WSRPCBase, WSRPCClient
+
+
+async def emitter(socket: WSRPCBase):
+    await socket.emit({"Hello": "world"})
+
+
+async def test_emitter(client: WSRPCClient, handler):
+    handler.add_route("emitter", emitter)
+
+    async with client:
+        future = asyncio.get_running_loop().create_future()
+
+        client.add_event_listener(future.set_result)
+
+        await client.proxy.emitter()
+        result = await future
+
+        assert result == {"Hello": "world"}

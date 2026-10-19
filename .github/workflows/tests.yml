@@ -1,0 +1,79 @@
+name: tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  PYTHONUTF8: "1"
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: "0.13.1"
+          python-version: "3.14"
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run --locked pytask -k "lint or typing or test_readme or build"
+
+  tests:
+    runs-on: ${{ matrix.os }}
+    env:
+      WSRPC_EXPECT_FREE_THREADED: ${{ endsWith(matrix.python, 't') && '1' || '0' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15", "3.13t", "3.14t", "3.15t"]
+        include:
+          - os: windows-latest
+            python: "3.14"
+          - os: macos-latest
+            python: "3.14"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: "0.13.1"
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - run: uv sync --locked
+        if: ${{ !endsWith(matrix.python, 't') }}
+      - run: uv sync --locked --no-default-groups --group core-tests
+        if: endsWith(matrix.python, 't')
+      - name: Verify free-threaded runtime
+        if: endsWith(matrix.python, 't')
+        run: uv run --locked --no-default-groups --group core-tests python -c "import sys, wsrpc_asgi; assert not sys._is_gil_enabled()"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+      - run: uv run --locked pytask -k tests
+        if: ${{ !endsWith(matrix.python, 't') }}
+      - name: Test core on free-threaded Python
+        if: endsWith(matrix.python, 't')
+        run: uv run --locked --no-default-groups --group core-tests pytest tests --ignore=tests/test_examples.py --cov=wsrpc_asgi --cov-report=term-missing
+      - name: Test custom JSON codecs
+        if: ${{ !endsWith(matrix.python, 't') }}
+        run: uv run --locked --group serializers pytask -k tests
+
+  integrations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: "0.13.1"
+          python-version: "3.14"
+          enable-cache: true
+      - run: uv sync --locked --group integrations
+      - run: uv run --locked --group integrations pytest tests/test_examples.py -q
