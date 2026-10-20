@@ -112,6 +112,8 @@ Documentation and its runnable examples are maintained in [wsrpc/docs](https://g
 
 ## Development
 
+Building distributions from this repository requires Git, Node.js >=22 and npm: the browser client is built from current [wsrpc-ts](https://github.com/wsrpc/wsrpc-ts) sources. Installing a wheel or building from an sdist does not require Node.js. See [client build details](wsrpc_asgi/static/README.md) for revision selection and provenance.
+
 ```shell
 uv sync --locked
 uv run --locked pytask
